@@ -56,12 +56,14 @@ int bitXor(int x, int y) {
 
 #### 2、最小的int
 
+```
 /* 
  * tmin - return minimum two's complement integer 
  *   Legal ops: ! ~ & ^ | + << >>
  *   Max ops: 4
  *   Rating: 1
  */
+```
 
 思路：
 
@@ -79,11 +81,12 @@ int tmin(void) {
 
 #### 3、是否最大int
 
+```
 /*
  * isTmax - returns 1 if x is the maximum, two's complement number,and 0 otherwise 
  *   Legal ops: ! ~ & ^ | +
  *   Max ops: 10
  *   Rating: 1
  */
-
+```
 
