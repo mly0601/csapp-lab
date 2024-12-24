@@ -201,7 +201,7 @@ int isAsciiDigit(int x) {
 }
 ```
 
-#### 7.
+#### 7.实现条件选择
 
 ```
 /* 
@@ -212,3 +212,60 @@ int isAsciiDigit(int x) {
  *   Rating: 3
  */
 ```
+
+思路：
+
+根据x生成全1/全0掩码，再通过|进行实现选择
+
+解答如下：
+
+```
+int conditional(int x, int y, int z) {
+  x = !!x; // 0 if x is false, 1 if x is true
+  // 全0 mask if x is false, 全1 mask if x is true
+  return (((~x) + 1) & y) | (~((~x) + 1) & z);
+}
+```
+
+#### 8.小于等于
+
+```
+/* 
+ * isLessOrEqual - if x <= y  then return 1, else return 0 
+ *   Example: isLessOrEqual(4,5) = 1.
+ *   Legal ops: ! ~ & ^ | + << >>
+ *   Max ops: 24
+ *   Rating: 3
+ */
+```
+
+思路：
+
+x - y = x + ~y + 1来计算减法
+
+通过判断符号位来判断大于还是小于0
+
+还要考虑两种溢出的情况：
+
+如果x为正数，y为负数，直接返回0
+
+如果x为负数，y为正数，直接返回1
+
+解决如下：
+
+```
+int isLessOrEqual(int x, int y) {
+    int diff = x + (~y + 1);  // 计算 x - y
+    int signX = (x >> 31) & 1; // x 的符号位
+    int signY = (y >> 31) & 1; // y 的符号位
+    int signDiff = (diff >> 31) & 1; // x - y 的符号位
+    int diffIsZero = !diff; // x - y 是否为 0
+    int x_pos_y_neg = (!signX) & signY; // x 为正数，y 为负数
+    int x_neg_y_pos = signX & (!signY); // x 为负数，y 为正数
+
+    return ((signDiff | x_neg_y_pos | diffIsZero)) & (!x_pos_y_neg);
+}
+```
+
+#### 9.实现逻辑非
+
