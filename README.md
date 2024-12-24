@@ -80,8 +80,7 @@ int tmin(void) {
 #### 3、是否最大int
 
 /*
- * isTmax - returns 1 if x is the maximum, two's complement number,
- *     and 0 otherwise 
+ * isTmax - returns 1 if x is the maximum, two's complement number,and 0 otherwise 
  *   Legal ops: ! ~ & ^ | +
  *   Max ops: 10
  *   Rating: 1
