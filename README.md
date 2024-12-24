@@ -222,6 +222,7 @@ int isAsciiDigit(int x) {
 ```
 int conditional(int x, int y, int z) {
   x = !!x; // 0 if x is false, 1 if x is true
+  // mask = (~x) + 1
   // 全0 mask if x is false, 全1 mask if x is true
   return (((~x) + 1) & y) | (~((~x) + 1) & z);
 }
@@ -298,7 +299,7 @@ int logicalNeg(int x) {
 }
 ```
 
-#### 10.最小能生成的位
+#### 10.最小能生成该数的位
 
 ```
 /* howManyBits - return the minimum number of bits required to represent x in
