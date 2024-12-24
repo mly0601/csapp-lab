@@ -54,5 +54,37 @@ int bitXor(int x, int y) {
 }
 ```
 
+#### 2、最小的int
+
+/* 
+ * tmin - return minimum two's complement integer 
+ *   Legal ops: ! ~ & ^ | + << >>
+ *   Max ops: 4
+ *   Rating: 1
+ */
+
+思路：
+
+最小的int即 1000 0000 0000 0000 = -2^31，将1左移31位即可。
+
+解答如下：
+
+```
+int tmin(void) {
+
+  return 1 << 31;
+
+}
+```
+
+#### 3、是否最大int
+
+/*
+ * isTmax - returns 1 if x is the maximum, two's complement number,
+ *     and 0 otherwise 
+ *   Legal ops: ! ~ & ^ | +
+ *   Max ops: 10
+ *   Rating: 1
+ */
 
 
