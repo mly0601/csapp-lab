@@ -269,3 +269,50 @@ int isLessOrEqual(int x, int y) {
 
 #### 9.实现逻辑非
 
+```
+/* 
+ * logicalNeg - implement the ! operator, using all of 
+ *              the legal operators except !
+ *   Examples: logicalNeg(3) = 0, logicalNeg(0) = 1
+ *   Legal ops: ~ & ^ | + << >>
+ *   Max ops: 12
+ *   Rating: 4 
+ */
+```
+
+思路：
+
+如果如果x为非0，x | (-x) 的符号位为非0，否则为0
+
+-x = ~x + 1
+
+(x | (~x + 1)) >> 31 为全1，如果x为非0,全1 + 1 = 0
+
+(x | (~x + 1)) >> 31 为全0，如果x为0，全0 + 1 = 1
+
+解决如下：
+
+```
+int logicalNeg(int x) {
+  return ((x | (~x + 1)) >> 31) + 1;
+}
+```
+
+#### 10.最小能生成的位
+
+```
+/* howManyBits - return the minimum number of bits required to represent x in
+ *             two's complement
+ *  Examples: howManyBits(12) = 5
+ *            howManyBits(298) = 10
+ *            howManyBits(-5) = 4
+ *            howManyBits(0)  = 1
+ *            howManyBits(-1) = 1
+ *            howManyBits(0x80000000) = 32
+ *  Legal ops: ! ~ & ^ | + << >>
+ *  Max ops: 90
+ *  Rating: 4
+ */
+```
+
+思路：
