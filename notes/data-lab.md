@@ -444,7 +444,7 @@ int howManyBits(int x) {
 
 首先处理特殊情况（INF、NAN），特点为M为0xff，直接返回这个数
 
-处理非标准数，需要确定是否会变成标准数，只需要看E是否超过0x7fffff
+处理非规格数，需要确定是否会变成规格数，只需要看E是否超过0x7fffff，若超过E需要去掉溢出部分，M变成M+1（规格数的表示）
 
 解答如下：
 
@@ -461,8 +461,8 @@ unsigned floatScale2(unsigned uf) {
   }else if(M == 0){ //非规格化的情况
     E = E << 1;
     if(E > 0x7fffff){ // 判断是否会变成规格化
-      M = M + 1;
-      E = E - 0x800000;
+      M = M + 1; // 规格化的情况
+      E = E - 0x800000; // 去除E的溢出位
     }
   }else{ //规格化的情况
     M = M + 1;
@@ -472,4 +472,22 @@ unsigned floatScale2(unsigned uf) {
 }
 ```
 
-#### 12.
+#### 12.将浮点数转化为整数
+
+```
+/* 
+ * floatFloat2Int - Return bit-level equivalent of expression (int) f
+ *   for floating point argument f.
+ *   Argument is passed as unsigned int, but
+ *   it is to be interpreted as the bit-level representation of a
+ *   single-precision floating point value.
+ *   Anything out of range (including NaN and infinity) should return
+ *   0x80000000u.
+ *   Legal ops: Any integer/unsigned operations incl. ||, &&. also if, while
+ *   Max ops: 30
+ *   Rating: 4
+ */
+```
+
+思路：
+
