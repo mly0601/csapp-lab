@@ -1,6 +1,10 @@
-## csapp-lab学习笔记
+## data-lab
 
-### data-lab
+### 一些小坑
+
+使用dlc时出现bits.c:xx:parse error bits.c:xx:undeclared variable xx 是因为该编译器仅仅支持C89的语法,**需要将变量全部在代码块的开头声明**。
+
+使用dlc时出现bits.c:284: Warning: suggest parentheses around arithmetic in operand of x 是因为运算符优先级肯存在歧义，建议为优先运算块加括号
 
 #### 1、按位异或
 
@@ -221,10 +225,11 @@ int isAsciiDigit(int x) {
 
 ```
 int conditional(int x, int y, int z) {
+  int mask;
   x = !!x; // 0 if x is false, 1 if x is true
-  // mask = (~x) + 1
+  mask = (~x) + 1;
   // 全0 mask if x is false, 全1 mask if x is true
-  return (((~x) + 1) & y) | (~((~x) + 1) & z);
+  return (mask & y) | (~mask & z);
 }
 ```
 
@@ -353,55 +358,44 @@ x = x ^ sign;       // 如果是负数，相当于取反，如果是正数不变
 
 ```
 int howManyBits(int x) {
-    int sign = x >> 31;   // 符号位：正数为0，负数为-1
-    x = x ^ sign;         // 如果是负数，转为等效正数；正数保持不变
+  int bits, high16, high8, high4, high2, high1;
+  int sign = x >> 31;   // 符号位：正数为0，负数为-1
+  x = x ^ sign;         // 如果是负数，转为等效正数；正数保持不变
 
-    // 开始二分查找最高有效位位置
-    int bits = 0;
+  // 开始二分查找最高有效位位置
+  bits = 0;
 
-    // 如果高 16 位有有效位
-    int high16 = !!(x >> 16) << 4; // 如果高 16 位不为零，结果加上 16
-    bits += high16;
-    x >>= high16; // 右移高 16 位
+  // 如果高 16 位有有效位
+  high16 = !!(x >> 16) << 4; // 如果高 16 位不为零，结果加上 16
+  bits += high16;
+  x >>= high16; // 右移高 16 位
 
-    // 如果高 8 位有有效位
-    int high8 = !!(x >> 8) << 3; // 如果高 8 位不为零，结果加上 8
-    bits += high8;
-    x >>= high8; // 右移高 8 位
+  // 如果高 8 位有有效位
+  high8 = !!(x >> 8) << 3; // 如果高 8 位不为零，结果加上 8
+  bits += high8;
+  x >>= high8; // 右移高 8 位
 
-    // 如果高 4 位有有效位
-    int high4 = !!(x >> 4) << 2; // 如果高 4 位不为零，结果加上 4
-    bits += high4;
-    x >>= high4; // 右移高 4 位
+  // 如果高 4 位有有效位
+  high4 = !!(x >> 4) << 2; // 如果高 4 位不为零，结果加上 4
+  bits += high4;
+  x >>= high4; // 右移高 4 位
 
-    // 如果高 2 位有有效位
-    int high2 = !!(x >> 2) << 1; // 如果高 2 位不为零，结果加上 2
-    bits += high2;
-    x >>= high2; // 右移高 2 位
+  // 如果高 2 位有有效位
+  high2 = !!(x >> 2) << 1; // 如果高 2 位不为零，结果加上 2
+  bits += high2;
+  x >>= high2; // 右移高 2 位
 
-    // 如果高 1 位有有效位
-    int high1 = !!(x >> 1); // 如果高 1 位不为零，结果加上 1
-    bits += high1;
-    x >>= high1; // 右移高 1 位
+  // 如果高 1 位有有效位
+  high1 = !!(x >> 1); // 如果高 1 位不为零，结果加上 1
+  bits += high1;
+  x >>= high1; // 右移高 1 位
 
-    // 最低 1 位
-    bits += x; // 如果最低位不为零，加上 1
+  // 最低 1 位
+  bits += x; // 如果最低位不为零，加上 1
 
-    // 返回所需位数，加上符号位
-    return bits + 1;
+  // 返回所需位数，加上符号位
+  return bits + 1;
 }
-```
-
-以其中一段为例解释：
-
-```
-    // 开始二分查找最高有效位位置
-    int bits = 0;
-
-    // 如果高 16 位有有效位
-    int high16 = !!(x >> 16) << 4; // 如果高 16 位不为零，结果加上 16
-    bits += high16;
-    x >>= high16; // 右移高 16 位
 ```
 
 !!(x >> 16)将高16位转化为bool值，如果为0代表高16为没有有效位，相应的high16也会为0
