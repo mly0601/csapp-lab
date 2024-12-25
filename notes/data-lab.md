@@ -26,7 +26,7 @@
 
 使用dlc时出现bits.c:284: Warning: suggest parentheses around arithmetic in operand of x 是因为运算符优先级肯存在歧义，建议为优先运算块加括号
 
-#### 1、按位异或
+#### 1.按位异或
 
 ```
 /* 
@@ -78,7 +78,7 @@ int bitXor(int x, int y) {
 }
 ```
 
-#### 2、最小的int
+#### 2.最小的int
 
 ```
 /* 
@@ -103,7 +103,7 @@ int tmin(void) {
 }
 ```
 
-#### 3、是否最大int
+#### 3.是否最大int
 
 ```
 /*
@@ -420,6 +420,22 @@ int howManyBits(int x) {
 
 !!(x >> 16)将高16位转化为bool值，如果为0代表高16为没有有效位，相应的high16也会为0
 
-#### 还有三道浮点数
+#### 11.浮点数乘2
 
-略
+```
+/* 
+ * floatScale2 - Return bit-level equivalent of expression 2*f for
+ *   floating point argument f.
+ *   Both the argument and result are passed as unsigned int's, but
+ *   they are to be interpreted as the bit-level representation of
+ *   single-precision floating point values.
+ *   When argument is NaN, return argument
+ *   Legal ops: Any integer/unsigned operations incl. ||, &&. also if, while
+ *   Max ops: 30
+ *   Rating: 4
+ */
+```
+
+思路：
+
+单精度浮点数：
