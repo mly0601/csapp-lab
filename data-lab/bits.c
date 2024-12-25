@@ -143,7 +143,7 @@ NOTES:
  *   Rating: 1
  */
 int bitXor(int x, int y) {
-  return (~(x&y)&~(~x&~y));
+  return 2;
 }
 /* 
  * tmin - return minimum two's complement integer 
@@ -153,7 +153,7 @@ int bitXor(int x, int y) {
  */
 int tmin(void) {
 
-  return 0x1 << 31;
+  return 2;
 
 }
 //2
@@ -164,10 +164,8 @@ int tmin(void) {
  *   Max ops: 10
  *   Rating: 1
  */
-#define IS_EQUAL(x,y) (!(x^y))
 int isTmax(int x) {
-  int max = ~(0x1<<31) ;
-  return IS_EQUAL(max,x);
+  return 2;
 }
 /* 
  * allOddBits - return 1 if all odd-numbered bits in word set to 1
@@ -178,9 +176,7 @@ int isTmax(int x) {
  *   Rating: 2
  */
 int allOddBits(int x) {
-  int mask = (0xAA << 8) + 0xAA;
-  mask += mask << 16;
-  return IS_EQUAL((mask&x),mask);
+  return 2;
 }
 /* 
  * negate - return -x 
@@ -190,7 +186,7 @@ int allOddBits(int x) {
  *   Rating: 2
  */
 int negate(int x) {
-  return ~x+1;
+  return 2;
 }
 //3
 /* 
@@ -202,11 +198,8 @@ int negate(int x) {
  *   Max ops: 15
  *   Rating: 3
  */
-#define TO_BOOL(x) (!!x)
 int isAsciiDigit(int x) {
-  int value1 = IS_EQUAL((x >> 4),0x3);
-  int value2 = ((x & 0xF)+(~0xA+1)) & (0x1<<31); 
-  return TO_BOOL(value1) & TO_BOOL(value2);
+  return 2;
 }
 /* 
  * conditional - same as x ? y : z 
@@ -216,8 +209,7 @@ int isAsciiDigit(int x) {
  *   Rating: 3
  */
 int conditional(int x, int y, int z) {
-  int value1 = ~TO_BOOL(x)+1;
-  return (y & value1) | (z & ~value1);
+  return 2;
 }
 /* 
  * isLessOrEqual - if x <= y  then return 1, else return 0 
@@ -227,12 +219,7 @@ int conditional(int x, int y, int z) {
  *   Rating: 3
  */
 int isLessOrEqual(int x, int y) {
-  int isXNeg = x & (0x1<<31);
-  int isYNeg = y & (0x1<<31);
-  int isNotSame = (isXNeg ^ isYNeg);
-  int value1 = conditional(isNotSame, x>>31,(x + (~y+1)) & (0x1<<31));
-  int value2 = IS_EQUAL(x,y);
-  return TO_BOOL(value1) | TO_BOOL(value2);
+  return 2;
 }
 //4
 /* 
@@ -244,8 +231,7 @@ int isLessOrEqual(int x, int y) {
  *   Rating: 4 
  */
 int logicalNeg(int x) {
-  int value = ((x | (~x+1)) >> 31) + 1;
-  return value & 0x1;
+  return 2;
 }
 /* howManyBits - return the minimum number of bits required to represent x in
  *             two's complement
@@ -260,26 +246,7 @@ int logicalNeg(int x) {
  *  Rating: 4
  */
 int howManyBits(int x) {
-  x = conditional(x&(0x1<<31),~x,x);
-
-  int bit16 = (TO_BOOL((x>>16))) << 4;
-  x = x >> bit16;
-
-  int bit8 = (TO_BOOL((x>>8))) << 3;
-  x = x >> bit8;
-
-  int bit4 = (TO_BOOL((x>>4))) << 2;
-  x = x >> bit4;
-
-  int bit2 = (TO_BOOL((x>>2))) <<1;
-  x = x>> bit2;
-
-  int bit1 = (TO_BOOL((x>>1)));
-  x = x>>bit1;
-
-  int bit0 = x;
-
-  return bit16 + bit8 + bit4 + bit2 + bit1 + bit0 + 1;
+  return 0;
 }
 //float
 /* 
@@ -294,15 +261,7 @@ int howManyBits(int x) {
  *   Rating: 4
  */
 unsigned floatScale2(unsigned uf) {
-  unsigned sign = (0x1<<31) & uf;
-  unsigned exp = ((0xff<<23) & uf) >> 23;
-  unsigned frac = (~((0x1<<31) | (0xff<<23))) & uf;
-
-  if (exp==0) return (frac << 1) | sign;
-  if (exp==255) return uf;
-  exp += 1;
-  if(exp == 255) return  (0xff<<23) | sign;
-  return sign | (exp<<23) | frac;
+  return 2;
 }
 /* 
  * floatFloat2Int - Return bit-level equivalent of expression (int) f
@@ -317,26 +276,7 @@ unsigned floatScale2(unsigned uf) {
  *   Rating: 4
  */
 int floatFloat2Int(unsigned uf) {
-  unsigned sign = (0x1<<31) & uf;
-  unsigned exp = ((0xff<<23) & uf) >> 23;
-  unsigned frac = (~((0x1<<31) | (0xff<<23))) & uf;
-
-  int expV = exp - 127;
-  if(exp == 255 || expV > 31) return 0x1<<31;
-  if(expV < 0) return 0;
-
-  unsigned fracV = frac | (0x1<<23);
-  int result;
-  if(expV > 23) {
-    result = fracV << (expV-23);
-  }
-  else {
-    result = fracV >> (23-expV);
-  }
-
-  if(sign) result = ~result + 1;
-
-  return result;
+  return 2;
 }
 /* 
  * floatPower2 - Return bit-level equivalent of the expression 2.0^x
@@ -352,8 +292,5 @@ int floatFloat2Int(unsigned uf) {
  *   Rating: 4
  */
 unsigned floatPower2(int x) {
-    if(x > 127) return 0xff<<23;
-    if(x >= -126) return (x + 127) << 23;
-    if(x >= -150) return 1<<(x+150);
-    return 0;
+    return 2;
 }
