@@ -438,4 +438,38 @@ int howManyBits(int x) {
 
 思路：
 
-单精度浮点数：
+熟悉单精度浮点数的组成：[IEEE浮点表示](https://github.com/mly0601/Wiki/blob/main/CSAPP/2_信息的表示与处理.md#ieee浮点表示)
+
+单精度浮点数：32位（1位符号位 + 8位指数位 + 23尾数位）
+
+首先处理特殊情况（INF、NAN），特点为M为0xff，直接返回这个数
+
+处理非标准数，需要确定是否会变成标准数，只需要看E是否超过0x7fffff
+
+解答如下：
+
+```
+unsigned floatScale2(unsigned uf) {
+  unsigned s, M, E, ans;
+  //分解出s, M, E
+  s = uf >> 31;
+  M = (uf >> 23) & (0xff);
+  E = uf & (0x7fffff);
+  
+  if(M == 0xff){ // NaN、Infinity的情况
+    return uf;
+  }else if(M == 0){ //非规格化的情况
+    E = E << 1;
+    if(E > 0x7fffff){ // 判断是否会变成规格化
+      M = M + 1;
+      E = E - 0x800000;
+    }
+  }else{ //规格化的情况
+    M = M + 1;
+  }
+  ans = (s<<31) | (M << 23) | E;
+  return ans;
+}
+```
+
+#### 12.
