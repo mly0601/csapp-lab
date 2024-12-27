@@ -26,6 +26,10 @@
 
 使用dlc时出现bits.c:284: Warning: suggest parentheses around arithmetic in operand of x 是因为运算符优先级肯存在歧义，建议为优先运算块加括号
 
+### 说明
+
+最后三道题关于浮点数，参考帖子：[参考](https://zhuanlan.zhihu.com/p/663553930)
+
 #### 1.按位异或
 
 ```
@@ -491,3 +495,93 @@ unsigned floatScale2(unsigned uf) {
 
 思路：
 
+本题需要熟悉计算从浮点数转换为整数的规则，经过分析可以分为以下几种情况，
+
+特殊值 NaN 和 infinity 的情况，会返回0x80000000u
+
+非标准化的情况会返回0，因为非标准化表示的是小于1的数
+
+实际阶数 a 满足a < 0的数同样返回0，因为表示的数同样小于1
+
+实际阶数 a 满足0 <= a <= 23的情况，保留整数部分的数，具体计算规则见代码
+
+实际阶数 a 满足a > 23，根据题目要求返回0x80000000u
+
+其中非特殊情况还要加上符号位。
+
+解答如下：
+
+```
+int floatFloat2Int(unsigned uf) {
+  unsigned s, M, E ;
+  int ans, a;
+  //分解出s, M, E
+  s = uf >> 31;
+  M = (uf >> 23) & (0xff);
+  E = uf & (0x7fffff);
+  a = M - 127; //a表示实际的阶数
+
+  if(M == 0xff){ // NaN、Infinity的情况
+    return 0x80000000u;
+  }else if(M == 0){ //非规格化的情况
+    ans = 0;
+  }else if(a < 0){ // 阶数为负的情况
+    ans = 0;
+  }else if (a <= 23){ //阶数符合整数规则的情况
+    ans = (E >> (23 - a)) + (1 << a);
+    // printf("0x%x %d %d\n",uf, ans, a+1);
+  }else{ //阶数溢出的情况
+    return 0x80000000u;
+  }
+  if(s){
+     ans = -ans;
+  }
+  return ans;
+}
+```
+
+#### 13.浮点数对2的幂计算
+
+```
+/* 
+ * floatPower2 - Return bit-level equivalent of the expression 2.0^x
+ *   (2.0 raised to the power x) for any 32-bit integer x.
+ *
+ *   The unsigned value that is returned should have the identical bit
+ *   representation as the single-precision floating-point number 2.0^x.
+ *   If the result is too small to be represented as a denorm, return
+ *   0. If too large, return +INF.
+ * 
+ *   Legal ops: Any integer/unsigned operations incl. ||, &&. Also if, while 
+ *   Max ops: 30 
+ *   Rating: 4
+ */
+```
+
+思路：
+
+一个小坑 :出现Timed out after 10 secs (probably infinite loop)的情况，应该是虚拟机性能不佳，绝对时间的超时。可以使用参数-T 20将执行限制时间改为20秒即可。
+
+本题需要实现一个浮点数对2的幂计算，我们容易想到的是，浮点数本身计数方式就是以2的幂次形式，因此通过改变其中M的部分就可以实现大部分浮点运算。很容易想到的是当超出最大能表示数时返回0x7f800000（即无限大），当小到无法表示时，输出0。
+
+但是事实上如果仅仅考虑阶数的问题，其实并没有得到正确答案，尽管这样做可以通过官方测试案例，但并不是正确答案。其实不应只靠考虑标准浮点数，非标准浮点数同样也应该考虑在内，我们把x + 121记作M，也就是真实阶数数，当阶数在0 =< M <= 23时能用非标准浮点数表示，详见代码如下。
+
+解答如下：
+
+```
+unsigned floatPower2(int x) {
+  unsigned  ans; 
+  //真实的阶数
+  int M = x + 127;
+  if(M > 0xff){ //表示无穷大
+    ans = 0x7f800000;
+  }else if(M  > 0){ // 表示在标准浮点数表示的部分
+    ans = M << 23;
+  }else if(M > -23){ // 表示在非标准浮点数表示的部分
+    ans = 1 << (M + 22);
+  }else{ // 小于浮点数表示的部分
+    ans = 0;
+  }
+  return ans;
+}
+```
