@@ -595,3 +595,9 @@ unsigned floatPower2(int x) {
     }
 }
 ```
+
+#### 运行结果
+
+运行结果如下：
+
+![data-lab运行结果.png](pictures/data-lab运行结果.png)
