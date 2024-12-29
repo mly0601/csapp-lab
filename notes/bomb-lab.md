@@ -171,3 +171,42 @@ x: 表示执行“检查内存”的命令;/s: 指定检查内存的格式为字
 
 #### 第二个密码
 
+定位到phase_2调用的汇编代码：
+
+```
+  400e4e:	e8 4b 06 00 00       	callq  40149e <read_line>
+  400e53:	48 89 c7             	mov    %rax,%rdi
+  400e56:	e8 a1 00 00 00       	callq  400efc <phase_2> // 同样字符串输入作为参数rdi
+  400e5b:	e8 64 07 00 00       	callq  4015c4 <phase_defused>
+```
+
+查看phase_2的汇编代码：
+
+```
+0000000000400efc <phase_2>:
+  400efc:	55                   	push   %rbp
+  400efd:	53                   	push   %rbx
+  400efe:	48 83 ec 28          	sub    $0x28,%rsp // 开辟栈操作
+  400f02:	48 89 e6             	mov    %rsp,%rsi // rsp栈指针作为第二个参数rsi？
+  400f05:	e8 52 05 00 00       	callq  40145c <read_six_numbers>
+  400f0a:	83 3c 24 01          	cmpl   $0x1,(%rsp) // (%rsp)-0x1
+  400f0e:	74 20                	je     400f30 <phase_2+0x34> // 相等则
+  400f10:	e8 25 05 00 00       	callq  40143a <explode_bomb>
+  400f15:	eb 19                	jmp    400f30 <phase_2+0x34>
+  400f17:	8b 43 fc             	mov    -0x4(%rbx),%eax // eax = (rbx - 0x4)
+  400f1a:	01 c0                	add    %eax,%eax // eax = eax + eax
+  400f1c:	39 03                	cmp    %eax,(%rbx) // 
+  400f1e:	74 05                	je     400f25 <phase_2+0x29>
+  400f20:	e8 15 05 00 00       	callq  40143a <explode_bomb>
+  400f25:	48 83 c3 04          	add    $0x4,%rbx
+  400f29:	48 39 eb             	cmp    %rbp,%rbx
+  400f2c:	75 e9                	jne    400f17 <phase_2+0x1b>
+  400f2e:	eb 0c                	jmp    400f3c <phase_2+0x40>
+  400f30:	48 8d 5c 24 04       	lea    0x4(%rsp),%rbx // rbx = 0x4 + rsp
+  400f35:	48 8d 6c 24 18       	lea    0x18(%rsp),%rbp // rbp = 0x18 + rsp
+  400f3a:	eb db                	jmp    400f17 <phase_2+0x1b>
+  400f3c:	48 83 c4 28          	add    $0x28,%rsp // 销毁栈操作
+  400f40:	5b                   	pop    %rbx
+  400f41:	5d                   	pop    %rbp
+  400f42:	c3                   	retq   
+```
