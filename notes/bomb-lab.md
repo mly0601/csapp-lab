@@ -36,6 +36,138 @@ gdb的一些小技巧：设置断点；设置断点可以防止程序因输入�
 
 - man/info查看工具的用法
 
-### 实验步骤
+### 准备步骤
 
+1.生成符号表
+
+```
+objdump -t bomb > ./symbol_table.txt
+```
+
+如下所示：
+
+```
+bomb:     file format elf64-x86-64
+
+
+SYMBOL TABLE:
+0000000000400238 l    d  .interp	0000000000000000              .interp
+0000000000400254 l    d  .note.ABI-tag	0000000000000000              .note.ABI-tag
+0000000000400274 l    d  .note.gnu.build-id	0000000000000000              .note.gnu.build-id
+0000000000400298 l    d  .gnu.hash	0000000000000000              .gnu.hash
+00000000004002c8 l    d  .dynsym	0000000000000000              .dynsym
+00000000004005c8 l    d  .dynstr	0000000000000000              .dynstr
+```
+
+使用如下命令：
+
+```
+man objdump
+```
+
+可以查看每一列的含义：
+
+第一列是地址；第二列是标志位，这里列出几种常见的：l代表本地，g代表全局，f代表文件，F代表函数，O代表对象；第三列是符号所属的段名称，或者是ABS，表示该段是绝对的，与任何段无关。或者是UND，表示没有定义在当前程序中；第四段是对齐方式/大小。最后会显示符号的名称。
+
+2.生成所有汇编代码
+
+```
+objdump -d bomb > ./bomb.s
+```
+
+### 开始分析
+
+#### 第一个密码
+
+查看bomb.c文件，有如下代码：
+
+```
+    /* Do all sorts of secret stuff that makes the bomb harder to defuse. */
+    initialize_bomb();
+
+    printf("Welcome to my fiendish little bomb. You have 6 phases with\n");
+    printf("which to blow yourself up. Have a nice day!\n");
+
+    /* Hmm...  Six phases must be more secure than one phase! */
+    input = read_line();             /* Get input                   */
+    phase_1(input);                  /* Run the phase               */
+    phase_defused();                 /* Drat!  They figured it out!
+				      * Let me know how they did it. */
+    printf("Phase 1 defused. How about the next one?\n");
+```
+
+可以看到phase_1函数判断input是否正确，查看bomb.s中phase_1的汇编代码：
+
+```
+0000000000400ee0 <phase_1>:
+  400ee0:	48 83 ec 08          	sub    $0x8,%rsp
+  400ee4:	be 00 24 40 00       	mov    $0x402400,%esi // esi是第二个参数
+  400ee9:	e8 4a 04 00 00       	callq  401338 <strings_not_equal>
+  400eee:	85 c0                	test   %eax,%eax
+  400ef0:	74 05                	je     400ef7 <phase_1+0x17> // 如果返回值为0，正常退出
+  400ef2:	e8 43 05 00 00       	callq  40143a <explode_bomb> // 返回值不为0，炸弹爆炸
+  400ef7:	48 83 c4 08          	add    $0x8,%rsp
+  400efb:	c3                   	retq   
+```
+
+可以看到，phase_1实际上是调用了strings_not_equal判断两个输入参数是否相等，是则解决，反之爆炸。可以写出phase_1的伪代码：
+
+```
+phase_1(rdi) {
+  esi = 0x402400;
+  eax = strings_not_equal(rdi, esi);
+  if (!eax) {
+    explode_bomb();
+  }
+}
+```
+
+查看bomb.s中main函数，定位到调用phase_1之前，查看rdi的内容：
+
+```
+  400e19:	e8 84 05 00 00       	callq  4013a2 <initialize_bomb>
+  400e1e:	bf 38 23 40 00       	mov    $0x402338,%edi
+  400e23:	e8 e8 fc ff ff       	callq  400b10 <puts@plt>
+  400e28:	bf 78 23 40 00       	mov    $0x402378,%edi
+  400e2d:	e8 de fc ff ff       	callq  400b10 <puts@plt>
+  400e32:	e8 67 06 00 00       	callq  40149e <read_line>
+  400e37:	48 89 c7             	mov    %rax,%rdi // %rax是read_line的返回值，也就是输入的字符串,作为参数传递给phase_1
+  400e3a:	e8 a1 00 00 00       	callq  400ee0 <phase_1>
+```
+
+可知，rdi就是我们输入的字符串。大胆猜测strings_not_equal这里就是在判断我们的输入与0x402400处的字符串是否相等。查看strings_not_equal汇编代码求证，其写成伪代码逻辑为：
+
+```
+strings_not_equals(rdi, rsi){
+	//第一个字符串
+	rbx = rdi;
+	//第二个字符串
+	rbp = rsi;
+	eax = string_length(rdi);
+	//r12d 存长度
+	r12d = eax;
+	rdi = rbp;
+	eax = string_length(rdi);
+  if(eax != r12d) retrun eax = edx = 1;
+	eax = *(rbx);
+	for(al != 0){
+		if(al != *(rbp)) retrun eax = edx = 1;
+		rbx++;
+		rbp++;
+		eax = *(rbx);
+	}
+	return eax = edx = 0;
+}
+```
+
+就是一个判断两个字符串是否相等的函数，所以第一个密码就是0x402400处的字符串。可以通过gdb输出：
+
+```
+(gdb) x/s 0x402400
+0x402400:       "Border relations with Canada have never been better."
+```
+
+x: 表示执行“检查内存”的命令;/s: 指定检查内存的格式为字符串 (string);0x402338: 指定要检查的内存地址。
+
+#### 第二个密码
 
