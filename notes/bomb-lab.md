@@ -187,7 +187,7 @@ x: 表示执行“检查内存”的命令;/s: 指定检查内存的格式为字
   400efc:	55                   	push   %rbp
   400efd:	53                   	push   %rbx
   400efe:	48 83 ec 28          	sub    $0x28,%rsp // 开辟栈操作
-  400f02:	48 89 e6             	mov    %rsp,%rsi // rsp栈指针作为第二个参数rsi？
+  400f02:	48 89 e6             	mov    %rsp,%rsi // 此时的rsp栈指针作为第二个参数rsi
   400f05:	e8 52 05 00 00       	callq  40145c <read_six_numbers>
   400f0a:	83 3c 24 01          	cmpl   $0x1,(%rsp) // 比较(%rsp)与0x1
   400f0e:	74 20                	je     400f30 <phase_2+0x34> // 相等则跳转到400f30
@@ -210,3 +210,46 @@ x: 表示执行“检查内存”的命令;/s: 指定检查内存的格式为字
   400f41:	5d                   	pop    %rbp
   400f42:	c3                   	retq   
 ```
+
+可知，phase_2调用read_six_numbers，rdi、rsi作为两个输入参数，查看其汇编代码：
+
+```
+000000000040145c <read_six_numbers>:
+  40145c:	48 83 ec 18          	sub    $0x18,%rsp
+  401460:	48 89 f2             	mov    %rsi,%rdx
+  401463:	48 8d 4e 04          	lea    0x4(%rsi),%rcx
+  401467:	48 8d 46 14          	lea    0x14(%rsi),%rax
+  40146b:	48 89 44 24 08       	mov    %rax,0x8(%rsp)
+  401470:	48 8d 46 10          	lea    0x10(%rsi),%rax
+  401474:	48 89 04 24          	mov    %rax,(%rsp)
+  401478:	4c 8d 4e 0c          	lea    0xc(%rsi),%r9
+  40147c:	4c 8d 46 08          	lea    0x8(%rsi),%r8
+  401480:	be c3 25 40 00       	mov    $0x4025c3,%esi
+  401485:	b8 00 00 00 00       	mov    $0x0,%eax
+  40148a:	e8 61 f7 ff ff       	callq  400bf0 <__isoc99_sscanf@plt>
+  40148f:	83 f8 05             	cmp    $0x5,%eax
+  401492:	7f 05                	jg     401499 <read_six_numbers+0x3d>
+  401494:	e8 a1 ff ff ff       	callq  40143a <explode_bomb>
+  401499:	48 83 c4 18          	add    $0x18,%rsp
+  40149d:	c3                   	retq   
+```
+
+可知，在40148a处，调用了sscanf函数，sscanf函数的原型如下：
+
+```
+int sscanf(const char *str, const char *format, ...);
+```
+
+第一个str表示输入字符串的地址，sscanf 会从这个字符串中解析数据。第二个format是格式化字符串，定义如何解析输入数据，例如："%d %d"。后面的...表示可变参数，是一个或多个指针，用于存储解析出的数据。每个指针对应 format 中的一个格式说明符。
+
+实际上，这个考察了当参数数量超过可用寄存器数量（6个，分别是rdi、rsi、rdx、rcx、r8、r9），超出6个的部分就必须要通过栈来传递。read_six_numbers中的汇编代码大部分都是在初始化这些参数，包括初始化寄存器和栈上需要传递的值。由地址401480可知，0x4025c3作为第二个参数format，通过gdb可以查看该参数的值：
+
+```
+(gdb) x/s 0x4025c3
+0x4025c3:       "%d %d %d %d %d %d"
+```
+
+可知，这里需要解析6个int整型数据。所以我们知道这里实际上在为sscanf准备8个参数（str、format和6个存储整型数据的指针），可见下面的分析图：
+
+
+
