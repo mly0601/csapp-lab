@@ -251,5 +251,5 @@ int sscanf(const char *str, const char *format, ...);
 
 可知，这里需要解析6个int整型数据。所以我们知道这里实际上在为sscanf准备8个参数（str、format和6个存储整型数据的指针），可见下面的分析图：
 
-
+![bomb_2.png](pictures/bomb_2.png)
 
