@@ -12,11 +12,7 @@
 
 CMU提供了一个gdb快速参考页：[gdb参考文档](https://www.cs.cmu.edu/~gilpin/tutorial/)
 
-gdb的一些小技巧：
-
-设置断点
-
-设置断点可以防止程序因输入错误而爆炸。
+gdb的一些小技巧：设置断点；设置断点可以防止程序因输入错误而爆炸。
 
 在 gdb 命令提示符下输入 help，或在 Unix 提示符下输入 man gdb 或 info gdb 查看在线文档。
 
@@ -38,4 +34,8 @@ gdb的一些小技巧：
 
 这个工具会显示炸弹中所有可打印的字符串。
 
-- man ascii/info gas
+- man/info查看工具的用法
+
+### 实验步骤
+
+
