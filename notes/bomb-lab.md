@@ -396,19 +396,77 @@ phase_3(rdi) {
   40101f:	b8 00 00 00 00       	mov    $0x0,%eax
   401024:	e8 c7 fb ff ff       	callq  400bf0 <__isoc99_sscanf@plt>
   401029:	83 f8 02             	cmp    $0x2,%eax
-  40102c:	75 07                	jne    401035 <phase_4+0x29>
-  40102e:	83 7c 24 08 0e       	cmpl   $0xe,0x8(%rsp)
-  401033:	76 05                	jbe    40103a <phase_4+0x2e>
-  401035:	e8 00 04 00 00       	callq  40143a <explode_bomb>
-  40103a:	ba 0e 00 00 00       	mov    $0xe,%edx
-  40103f:	be 00 00 00 00       	mov    $0x0,%esi
-  401044:	8b 7c 24 08          	mov    0x8(%rsp),%edi
-  401048:	e8 81 ff ff ff       	callq  400fce <func4>
+  40102c:	75 07                	jne    401035 <phase_4+0x29> // 解析结果不是两个数据，直接爆炸
+  40102e:	83 7c 24 08 0e       	cmpl   $0xe,0x8(%rsp) // (rsp + 8) - 14，即result1 - 14
+  401033:	76 05                	jbe    40103a <phase_4+0x2e> // jbe无符号小于等于，即reslut1 <= 14，跳转40103a
+  401035:	e8 00 04 00 00       	callq  40143a <explode_bomb> // result1 > 14，直接爆炸
+  40103a:	ba 0e 00 00 00       	mov    $0xe,%edx // edx = 14
+  40103f:	be 00 00 00 00       	mov    $0x0,%esi // esi = 0
+  401044:	8b 7c 24 08          	mov    0x8(%rsp),%edi // edi = result1
+  401048:	e8 81 ff ff ff       	callq  400fce <func4> // func4(edi, esi, edx) 即 func4(result1, 0, 14)
   40104d:	85 c0                	test   %eax,%eax
-  40104f:	75 07                	jne    401058 <phase_4+0x4c>
-  401051:	83 7c 24 0c 00       	cmpl   $0x0,0xc(%rsp)
-  401056:	74 05                	je     40105d <phase_4+0x51>
+  40104f:	75 07                	jne    401058 <phase_4+0x4c> // func4返回结果非0，直接爆炸
+  401051:	83 7c 24 0c 00       	cmpl   $0x0,0xc(%rsp) // result2 - 0 ?
+  401056:	74 05                	je     40105d <phase_4+0x51> // result2 == 0，跳转40105d函数正常结束，否则爆炸
   401058:	e8 dd 03 00 00       	callq  40143a <explode_bomb>
   40105d:	48 83 c4 18          	add    $0x18,%rsp
   401061:	c3                   	retq
+```
+
+可以写出phase_4的伪代码：
+
+```
+phase_4(rdi) {
+	rcx = rsp + 12;
+	rdx = rsp + 8;
+	esi = 0x4025cf;
+	eax = sscanf(rdi, esi, rdx, rcx);
+	if (eax != 2) {
+		explode_bomb(); // 解析字段数不等于2
+	}
+
+	if ((rsp + 8) > 14) {
+		explode_bomb(); // result1 > 14，直接爆炸
+	}
+
+	edx = 14；
+	esi = 0；
+	edi = (rsp + 8); // edi = result1
+	eax = func4(edi, esi, edx); // 即func4(result1, 0, 14)
+	if (eax != 0) {
+		explode_bomb(); // eax不为0，直接爆炸
+	}
+
+	if ((rsp + 12) != 0) {
+		explode_bomb(); // result2不为0，直接爆炸，所以result2为0
+	}
+	
+```
+
+上述分析可知，result2为0，result1需要查看func4汇编代码：
+
+```
+0000000000400fce <func4>:
+  400fce:	48 83 ec 08          	sub    $0x8,%rsp
+  400fd2:	89 d0                	mov    %edx,%eax
+  400fd4:	29 f0                	sub    %esi,%eax
+  400fd6:	89 c1                	mov    %eax,%ecx
+  400fd8:	c1 e9 1f             	shr    $0x1f,%ecx // shr逻辑右移31位
+  400fdb:	01 c8                	add    %ecx,%eax
+  400fdd:	d1 f8                	sar    %eax // 算数右移，没有给出移位，默认是cl寄存器（ecx的低8位）
+  400fdf:	8d 0c 30             	lea    (%rax,%rsi,1),%ecx
+  400fe2:	39 f9                	cmp    %edi,%ecx
+  400fe4:	7e 0c                	jle    400ff2 <func4+0x24> //小于等于
+  400fe6:	8d 51 ff             	lea    -0x1(%rcx),%edx
+  400fe9:	e8 e0 ff ff ff       	callq  400fce <func4>
+  400fee:	01 c0                	add    %eax,%eax
+  400ff0:	eb 15                	jmp    401007 <func4+0x39>
+  400ff2:	b8 00 00 00 00       	mov    $0x0,%eax
+  400ff7:	39 f9                	cmp    %edi,%ecx
+  400ff9:	7d 0c                	jge    401007 <func4+0x39>
+  400ffb:	8d 71 01             	lea    0x1(%rcx),%esi
+  400ffe:	e8 cb ff ff ff       	callq  400fce <func4>
+  401003:	8d 44 00 01          	lea    0x1(%rax,%rax,1),%eax
+  401007:	48 83 c4 08          	add    $0x8,%rsp
+  40100b:	c3                   	retq  
 ```
