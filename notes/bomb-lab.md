@@ -187,23 +187,23 @@ x: 表示执行“检查内存”的命令;/s: 指定检查内存的格式为字
   400efc:	55                   	push   %rbp
   400efd:	53                   	push   %rbx
   400efe:	48 83 ec 28          	sub    $0x28,%rsp // 开辟栈操作
-  400f02:	48 89 e6             	mov    %rsp,%rsi // 此时的rsp栈指针作为第二个参数rsi
-  400f05:	e8 52 05 00 00       	callq  40145c <read_six_numbers>
+  400f02:	48 89 e6             	mov    %rsp,%rsi // 此时的rsp栈指针作为第二个参数rsi传递给read_six_numbers
+  400f05:	e8 52 05 00 00       	callq  40145c <read_six_numbers> // 将输入的字符串解析为6个整型数据依次存储在栈上
   400f0a:	83 3c 24 01          	cmpl   $0x1,(%rsp) // 比较(%rsp)与0x1
-  400f0e:	74 20                	je     400f30 <phase_2+0x34> // 相等则跳转到400f30
+  400f0e:	74 20                	je     400f30 <phase_2+0x34> // 相等则跳转到400f30，即第一个数据是1
   400f10:	e8 25 05 00 00       	callq  40143a <explode_bomb> // 不相等炸弹爆炸
   400f15:	eb 19                	jmp    400f30 <phase_2+0x34>
-  400f17:	8b 43 fc             	mov    -0x4(%rbx),%eax // eax = (rbx - 0x4)
-  400f1a:	01 c0                	add    %eax,%eax // eax = eax + eax
-  400f1c:	39 03                	cmp    %eax,(%rbx) // 
-  400f1e:	74 05                	je     400f25 <phase_2+0x29>
-  400f20:	e8 15 05 00 00       	callq  40143a <explode_bomb>
-  400f25:	48 83 c3 04          	add    $0x4,%rbx
-  400f29:	48 39 eb             	cmp    %rbp,%rbx
-  400f2c:	75 e9                	jne    400f17 <phase_2+0x1b>
-  400f2e:	eb 0c                	jmp    400f3c <phase_2+0x40>
-  400f30:	48 8d 5c 24 04       	lea    0x4(%rsp),%rbx // rbx = 0x4 + rsp
-  400f35:	48 8d 6c 24 18       	lea    0x18(%rsp),%rbp // rbp = 0x18 + rsp
+  400f17:	8b 43 fc             	mov    -0x4(%rbx),%eax // eax = (rbx - 4) = (rsp)，即第一个数据
+  400f1a:	01 c0                	add    %eax,%eax // eax = eax + eax = 2 * (rsp)，即是第一个数据的两倍
+  400f1c:	39 03                	cmp    %eax,(%rbx) // 比较第二个数据与第一个数据的两倍是否相等
+  400f1e:	74 05                	je     400f25 <phase_2+0x29> // 相等跳转400f25
+  400f20:	e8 15 05 00 00       	callq  40143a <explode_bomb> // 不相等爆炸
+  400f25:	48 83 c3 04          	add    $0x4,%rbx // rbx = 4 + rbx = rsp + 8，即下一个数据的地址
+  400f29:	48 39 eb             	cmp    %rbp,%rbx // 比较是否到达最后一个数据
+  400f2c:	75 e9                	jne    400f17 <phase_2+0x1b> // 不到达，跳转400f17继续循环，每一次比较下一个数据是否是上一个数据的两倍
+  400f2e:	eb 0c                	jmp    400f3c <phase_2+0x40> // 到达退出循环
+  400f30:	48 8d 5c 24 04       	lea    0x4(%rsp),%rbx // rbx = 4 + rsp，即是第二个数据的地址
+  400f35:	48 8d 6c 24 18       	lea    0x18(%rsp),%rbp // rbp = 24 + rsp，即最后一个数据的地址
   400f3a:	eb db                	jmp    400f17 <phase_2+0x1b> // 跳转到400f17
   400f3c:	48 83 c4 28          	add    $0x28,%rsp // 销毁栈操作
   400f40:	5b                   	pop    %rbx
@@ -252,4 +252,30 @@ int sscanf(const char *str, const char *format, ...);
 可知，这里需要解析6个int整型数据。所以我们知道这里实际上在为sscanf准备8个参数（str、format和6个存储整型数据的指针），可见下面的分析图：
 
 ![bomb2_read_six_numbers.png](pictures/bomb2_read_six_numbers.png)
+
+上面的分析可知，解析出来的6个整型数被依次存储在phase_2的栈中，于是继续回到上面的phase_2的汇编代码分析，分析可知，phase_2在判断第一个数据是否为1且后面每个数据是否是前一个数据的两倍，可以写出下面的伪代码：
+
+```
+phase_2(rdi) {
+	rsi = rsp;
+	read_six_numbers(rdi, rsi); // 解析6个整型数据
+	if (rsp[0] != 1) {
+		explode_bomb();
+	}
+
+	for (int i = 1; i < 6; i++) {
+		if (rsp[i] != 2 * rsp[i - 1]) {
+			explode_bomb();
+		}
+	}
+}
+```
+
+由上面的分析可知，第二个密码是：
+
+```
+1 2 4 8 16 32
+```
+
+#### 第三个密码
 
