@@ -470,3 +470,49 @@ phase_4(rdi) {
   401007:	48 83 c4 08          	add    $0x8,%rsp
   40100b:	c3                   	retq  
 ```
+
+其对应的伪代码为：
+
+```
+void func4(int x,int y,int z)  //y的初始值为0，z的初始值为14,t->%rax,k->%ecx
+{
+  int t=z-y;
+  int k=t>>31;
+  t=(t+k)>>1;
+  k=t+y;
+  if(k>x)
+  {
+    z=k-1;
+    func4(x,y,z);
+    t=2t;
+    return;
+  }
+  else
+   {
+     t=0;
+     if(k<x)
+     {
+        y=k+1;
+        func4(x,y,z);
+        t=2*t+1;
+        return;
+     }
+     else
+     {
+         return;
+     }
+   }
+}
+```
+
+是一个二分查找的算法，故result1可选的值为7,3,1,0，result2为0。
+
+第四个密码：
+
+```
+0 0
+```
+
+#### 第五个密码
+
+
