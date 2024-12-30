@@ -517,4 +517,17 @@ void func4(int x,int y,int z)  //y的初始值为0，z的初始值为14,t->%rax,
 
 后面采用另一种方法，直接通过gdb调试的方法来获取密码，同时熟悉gdb操作。（注意，我们不需要关注所有的汇编细节,很多地方可以直接推测！）
 
+首先建立ans.txt供gdb运行调试：
+
+```
+[root@localhost bomb-lab]# cat ans.txt 
+Border relations with Canada have never been better.
+1 2 4 8 16 32
+2 707
+0 0
+abcdef
+```
+
+
+
 
