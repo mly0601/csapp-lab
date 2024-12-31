@@ -536,5 +536,16 @@ abcdef // 这里第5个密码abcdef作为调试测试密码，实际操作时把
 
 ![bomb5_4.png](pictures/bomb5_4.png)
 
+于是，问题被转化为：
+
+隐藏字符串"maduiersnfotvbylSo you think you can stop the bomb with ctrl-c, do you?"，我们输入的长度为6的每个字符,取其低4位置，然后作为索引。在该隐藏字符串中找出6个字符组成字符串，最后与"flyers"相等。
+
+"flyers"在隐藏字符串中的编号为：9 15 14 5 6 7
+
+查看ascii码:
+
+![ascii.png](pictures/ascii.png)
+
+
 
 
