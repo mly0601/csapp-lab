@@ -525,9 +525,10 @@ Border relations with Canada have never been better.
 1 2 4 8 16 32
 2 707
 0 0
-abcdef
+abcdef // 这里第5个密码abcdef作为调试测试密码，实际操作时把该注释删除
 ```
 
+![bomb5_1.png](pictures/bomb5_1.png)
 
 
 
