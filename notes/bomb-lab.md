@@ -530,5 +530,11 @@ abcdef // 这里第5个密码abcdef作为调试测试密码，实际操作时把
 
 ![bomb5_1.png](pictures/bomb5_1.png)
 
+![bomb5_2.png](pictures/bomb5_2.png)
+
+![bomb5_3.png](pictures/bomb5_3.png)
+
+![bomb5_4.png](pictures/bomb5_4.png)
+
 
 
